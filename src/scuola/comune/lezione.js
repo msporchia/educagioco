@@ -51,11 +51,12 @@ export function lezioneValida(l) {
   if (typeof l.nome !== 'string' || l.nome.length > MAX_NOME_LEZIONE) return false
   if (typeof l.inTondo !== 'boolean') return false
   if (!Array.isArray(l.blocchi) || !l.blocchi.length || l.blocchi.length > MAX_BLOCCHI) return false
-  return l.blocchi.every(b => oggetto(b) && Object.keys(b).every(k => k === 'esercizio' || k === 'passa') &&
-    valido(b.esercizio) && 'passa' in b && passaValido(b.passa))
+  // `turno: true`: finito il blocco, il PC torna alla lista dei codici e tocca a un altro bambino (docs/scuola/lezione.md)
+  return l.blocchi.every(b => oggetto(b) && Object.keys(b).every(k => k === 'esercizio' || k === 'passa' || k === 'turno') &&
+    valido(b.esercizio) && 'passa' in b && passaValido(b.passa) && (b.turno === undefined || b.turno === true))
 }
 
-export function descriviBlocco(b) { return `${descrivi(b.esercizio)} · ${descriviPassa(b.passa, b.esercizio)}` }
+export function descriviBlocco(b) { return `${descrivi(b.esercizio)} · ${descriviPassa(b.passa, b.esercizio)}${b.turno ? ' · poi tocca a un altro bambino' : ''}` }
 
 /* la forma di prima: `obiettivo: { esercizio, quante | minuti }` e `dopo` (un esercizio senza fine). Diventa un blocco
    che passa alla soglia e, se c'era, un secondo che non passa mai da solo. Una lezione già a blocchi torna uguale. */

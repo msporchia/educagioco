@@ -17,6 +17,9 @@ console.log('\nLA FORMA')
     ['un esercizio storto', lez([{ esercizio: { tipo: 'boh' }, passa: null }])], ['passa mancante', lez([{ esercizio: NOVE }])],
     ['una chiave in più', { ...lez([{ esercizio: NOVE, passa: null }]), obiettivo: {} }], ['inTondo non booleano', { ...lez([{ esercizio: NOVE, passa: null }]), inTondo: 1 }]])
     controlla(`non è valida: ${cosa}`, !lezioneValida(l))
+  // a turno: finito il blocco tocca a un altro bambino; solo `true`, mai altro
+  controlla('un blocco a turno', lezioneValida(lez([{ esercizio: NOVE, passa: { minuti: 10 }, turno: true }])))
+  controlla('turno è solo «sì»', !lezioneValida(lez([{ esercizio: NOVE, passa: null, turno: false }])) && !lezioneValida(lez([{ esercizio: NOVE, passa: null, turno: 1 }])))
   for (const p of [{ giuste: 0 }, { domande: 501 }, { minuti: 181 }, { giuste: 2, domande: 3 }, { secondi: 3 }, { giuste: '5' }, []])
     controlla(`passa storto: ${JSON.stringify(p)}`, !passaValido(p))
   stessaLista('si dice in italiano', [{ giuste: 5 }, { giuste: 1 }, { domande: 20 }, { minuti: 1 }, null].map(descriviPassa),

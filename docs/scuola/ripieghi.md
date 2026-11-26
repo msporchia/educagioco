@@ -8,6 +8,8 @@ dietro il suo codice; e senza internet la maestra fa partire un gioco su ogni PC
 
 Nella diretta, il riquadro «Se qualcosa non va» (`maestra/Diretta.vue`):
 
+- **«Cambio turno»**, accanto a «Cambia la lezione»: tutti i nomi presi tornano nella lista, per i PC che si danno il cambio
+  ([lezione.md](lezione.md), «A turno»).
 - **Al volo, in cima al pannello** (chiesto dall'utente il 22 novembre): «＋ Aggiungi un blocco» apre l'editor con un blocco
   nuovo in fondo (`aggiungi`), il «Cambia» sulla colonna di un blocco in «La classe» lo apre segnato su quel blocco (`blocco`).
   **Finita per tutti** non c'è più un tasto spento «Lezione finita»: c'è «＋ Aggiungi un blocco», e chi aveva finito passa al

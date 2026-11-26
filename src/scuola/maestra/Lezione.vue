@@ -30,7 +30,7 @@ const partenza = inCorso ? JSON.parse(JSON.stringify(inCorso)) : vecchia ? JSON.
 let chiavi = 0
 // `chiuso`: tutte le scelte fatte (uno salvato nasce così). Un blocco fatto resta le sue righe, ognuna col suo «Cambia»: provato un
 // riassunto in una riga con «Modifica», e non si capiva che le scelte si cambiano una per una (segnalato dall'utente)
-const daBlocco = b => ({ chiave: ++chiavi, esercizio: b.esercizio, modo: modoDi(b.passa), n: sogliaDi(b.passa), cambia: false,
+const daBlocco = b => ({ chiave: ++chiavi, esercizio: b.esercizio, modo: modoDi(b.passa), n: sogliaDi(b.passa), cambia: false, turno: !!b.turno,
                          chiuso: valido(b.esercizio) })
 const nome = ref(partenza.nome)
 const blocchi = ref(partenza.blocchi.map(daBlocco))
@@ -67,11 +67,13 @@ function cambiaEsercizio(b, x) { b.esercizio = x; sistemaModo(b) }
 // un blocco solo va finché la maestra chiude: niente «quando si passa» né «in tondo» (scelta dell'utente: un blocco dopo si
 // aggiunge, non si propone)
 const solo = computed(() => blocchi.value.length === 1)
-const passaVero = b => (solo.value ? null : passaDi(b))
+// un blocco solo va finché la maestra chiude, a meno che sia a turno: allora conta anche quando finisce (dopo quanti minuti)
+const conPassa = b => !solo.value || b.turno
+const passaVero = b => (conPassa(b) ? passaDi(b) : null)
 const pronta = computed(() => {
   const primo = blocchi.value[0]?.esercizio
   const n = Q.nomePulito(nome.value, Q.MAX_NOME_LEZIONE) || (valido(primo) ? descrivi(primo).slice(0, Q.MAX_NOME_LEZIONE) : '')
-  return { id: partenza.id, nome: n, blocchi: blocchi.value.map(b => ({ esercizio: b.esercizio, passa: passaVero(b) })), inTondo: !solo.value && inTondo.value }
+  return { id: partenza.id, nome: n, blocchi: blocchi.value.map(b => ({ esercizio: b.esercizio, passa: passaVero(b), ...(b.turno ? { turno: true } : {}) })), inTondo: !solo.value && inTondo.value }
 })
 const problema = computed(() => {
   for (const [i, b] of blocchi.value.entries()) {
@@ -160,8 +162,8 @@ async function copiaLink() {
       </span>
     </div>
     <SceltaEsercizio :model-value="b.esercizio" dove="blocco" @update:model-value="x => cambiaEsercizio(b, x)" @completo="b.chiuso = true" />
-    <p v-if="solo && valido(b.esercizio)" class="nota" data-un-blocco>Si gioca finché non chiudi la lezione.</p>
-    <div v-else-if="!solo" class="gruppo passa">
+    <p v-if="!conPassa(b) && valido(b.esercizio)" class="nota" data-un-blocco>Si gioca finché non chiudi la lezione.</p>
+    <div v-else-if="conPassa(b)" class="gruppo passa">
       <!-- come le altre scelte del blocco: una riga con «Cambia»; aperta, le scelte e «Fatto» -->
       <Fatta v-if="!b.cambia" :etichetta="titoloPassa(i)" :valore="passaValido(passaDi(b)) ? descriviPassa(passaDi(b), b.esercizio) : '…'"
              passo="passa" :data-passa-scelto="b.modo" @cambia="b.cambia = true" />
@@ -182,6 +184,14 @@ async function copiaLink() {
         </div>
         <div class="fila"><button class="bottone" :disabled="!passaValido(passaDi(b))" data-azione="passa-fatto" @click="b.cambia = false">Fatto</button></div>
       </template>
+    </div>
+    <!-- a turno, per pochi PC: finito il blocco il PC torna alla lista dei codici e tocca a un altro (docs/scuola/lezione.md) -->
+    <div v-if="valido(b.esercizio)" class="fila turno">
+      <label class="spunta">
+        <input v-model="b.turno" type="checkbox" data-campo="turno">
+        <span>Finito il blocco, tocca a un altro bambino</span>
+      </label>
+      <Aiuto testo="Per quando i PC sono pochi: finito il blocco, il PC torna alla lista dei codici e un altro bambino tocca il suo. Chi ha già giocato, quando ritocca il suo codice, anche su un altro PC, riparte dal blocco dopo. Con un blocco solo, scegli dopo quanti minuti finisce il turno." />
     </div>
   </section>
 

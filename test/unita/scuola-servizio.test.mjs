@@ -180,6 +180,16 @@ const dest = (r, a, t) => r.invii.filter(i => i.a === a && (!t || i.msg.t === t)
   r = L.daBambino(s, col, b2, 'posto0002', { k: 'lascia' })
   controlla('«lascia»: il nome torna libero, e il PC lo sa', dest(r, b2, 'stato')[0].io === null && !dest(r, m, 'alunni')[0].alunni.find(a => a.id === 'a2').preso)
   uguale('e si può riprendere', dest(L.daBambino(s, col, b2, 'posto0002', { k: 'sono', alunno: 'a2' }), b2, 'stato')[0].io.domande, true)
+  // a turno: un nome che torna nella lista si ricorda dov'era, e chi lo ritocca (anche su un altro PC) riparte da lì
+  L.daBambino(s, col, b2, 'posto0002', { k: 'dove', dove: 2 })
+  L.daBambino(s, col, b2, 'posto0002', { k: 'lascia' })
+  uguale('«lascia» si ricorda il blocco: il pavimento suo sale lì', dest(L.daBambino(s, col, b2, 'posto0002', { k: 'sono', alunno: 'a2' }), b2, 'stato')[0].io.avanti, 2)
+  L.daBambino(s, col, b2, 'posto0002', { k: 'dove', dove: 3 })
+  L.daMaestra(s, col, { k: 'libera', alunno: 'a2' })
+  uguale('anche «Rimetti nella lista» (il cambio turno della maestra)', dest(L.daBambino(s, col, b2, 'posto0002', { k: 'sono', alunno: 'a2' }), b2, 'stato')[0].io.avanti, 3)
+  controlla('il servizio tiene «turno» nei blocchi, e rifiuta un turno storto',
+    L.leggiLezione({ id: 'l', nome: 'x', inTondo: false, blocchi: [{ esercizio: { tipo: 'x' }, passa: null, turno: true }] })?.blocchi[0].turno === true &&
+    L.leggiLezione({ id: 'l', nome: 'x', inTondo: false, blocchi: [{ esercizio: { tipo: 'x' }, passa: null, turno: 'sì' }] }) === null)
   r = L.daMaestra(s, col, { k: 'chiudi' })
   controlla('a lezione chiusa la lezione non si cambia più', L.daMaestra(s, col, { k: 'lezione', lezione: altra }).invii.length === 0)
 }

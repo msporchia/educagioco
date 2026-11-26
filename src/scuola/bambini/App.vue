@@ -142,6 +142,20 @@ function menuNome() {
   cammino.value = null
   menu.value = false
 }
+// a turno (docs/scuola/lezione.md): il blocco appena finito lo dice, e invece del blocco dopo il PC torna alla lista dei codici.
+// La posizione è già andata al servizio (`dove`), che la ricorda: chi ritocca il suo codice, anche altrove, riparte da lì
+const turnoFinito = computed(() => {
+  const l = lezione.value
+  if (!l || (schermo.value !== 'passaggio' && schermo.value !== 'finito')) return false
+  const fatto = schermo.value === 'finito' ? l.blocchi.length - 1 : bloccoDi(l, pos.value - 1)
+  return !!l.blocchi[fatto]?.turno
+})
+const avvisoTurno = ref('')
+function fineTurno() {
+  if (!rete?.lascia()) { avvisoTurno.value = 'Non c\'è linea: riprova fra un attimo.'; return }
+  avvisoTurno.value = ''
+  cammino.value = null
+}
 function menuEsci() {
   if (!locale.value) rete?.lascia()
   esci()
@@ -264,6 +278,13 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
         <p class="frase">Questo gioco non parte su questo computer: chiama la maestra.</p>
       </div>
       <Domande v-else :key="'schede-' + chiaveVista" :esercizio="aSchede" :onRisposta="aPos(pos, risposta)" />
+    </div>
+
+    <div v-else-if="turnoFinito" class="centro" data-turno-finito>
+      <p class="grande">Bravo!</p>
+      <p class="frase">Il tuo turno è finito: adesso tocca a un altro bambino.</p>
+      <button type="button" class="bottone" data-azione="fine-turno" @click="fineTurno">Tocca a un altro</button>
+      <p v-if="avvisoTurno" class="frase" data-avviso-turno>{{ avvisoTurno }}</p>
     </div>
 
     <div v-else-if="schermo === 'passaggio'" class="centro" data-passaggio>

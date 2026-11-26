@@ -39,6 +39,21 @@ oltre l'ultimo blocco la lezione è finita per lui («Hai finito!»); in tondo `
 cominciato) riparte a ogni blocco; `superato(passa, conto, ora)` dice se la soglia è raggiunta. Una domanda conta quando si
 chiude (negli Asteroidi un colpo sbagliato con la domanda aperta non è una domanda fatta: [protocollo.md](protocollo.md)).
 
+## A turno, quando i PC sono pochi
+
+Chiesto dall'utente: con pochi PC i bambini si danno il cambio, e il cambio lo decide la maestra, in due modi.
+
+- **Nella lezione**, blocco per blocco: «Finito il blocco, tocca a un altro bambino» (`turno: true`, [protocollo.md](protocollo.md)).
+  Finito quel blocco, il PC dice «Il tuo turno è finito: adesso tocca a un altro bambino» (`[data-turno-finito]`) e «Tocca a un
+  altro» (`[data-azione="fine-turno"]`) rimanda il nome alla lista (`lascia`): un altro bambino tocca il suo codice. Anche con un
+  blocco solo: allora l'editor chiede quando finisce il turno (dopo quanti minuti, o quando lo dice lei).
+- **Dal pannello**, quando vuole lei: «Cambio turno» (`[data-azione="cambio-turno"]`, con conferma) rimette tutti i nomi presi
+  nella lista (`libera`).
+
+Chi ritocca il suo codice, anche su un altro PC, **riparte da dove era**: il servizio, liberando un nome, ne alza il pavimento
+alla sua posizione (`lasciaIlPosto`). Prima di questo, «Rimetti nella lista» faceva ripartire dal pavimento comune, cioè spesso
+dal primo blocco. Si perde solo il conto del blocco a metà (al cambio dal pannello).
+
 ## I casi di prima, dentro questo
 
 - **Un blocco solo** = si gioca finché la maestra chiude la lezione (`passa: null`): è la lezione nuova e quella pronta.

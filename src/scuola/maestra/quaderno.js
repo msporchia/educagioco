@@ -363,7 +363,7 @@ function normalizzaLezione(x) {
   if (!Array.isArray(l.blocchi) || !l.blocchi.length || l.blocchi.length > L.MAX_BLOCCHI) return null
   if (!l.blocchi.every(b => oggetto(b) && oggetto(b.esercizio) && 'passa' in b && L.passaValido(b.passa))) return null
   return JSON.parse(JSON.stringify({ id: l.id, nome: l.nome.slice(0, MAX_NOME_LEZIONE),
-    blocchi: l.blocchi.map(b => ({ esercizio: b.esercizio, passa: b.passa })), inTondo: l.inTondo === true }))
+    blocchi: l.blocchi.map(b => ({ esercizio: b.esercizio, passa: b.passa, ...(b.turno === true ? { turno: true } : {}) })), inTondo: l.inTondo === true }))
 }
 
 function normalizzaSbagliata(s) {

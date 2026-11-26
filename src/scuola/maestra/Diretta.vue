@@ -115,6 +115,12 @@ function avanti() { messaggio.value = ''; if (!avantiTutti()) senzaLinea() }
 
 const senzaLinea = () => { messaggio.value = 'Non c\'è linea: riprova fra un attimo.' }
 function parti() { messaggio.value = ''; if (!via()) senzaLinea() }
+function cambioTurno() {
+  messaggio.value = ''
+  const presi = alunni.value.filter(a => a.preso)
+  if (presi.some(a => !libera(a.id))) senzaLinea()
+  else messaggio.value = `Cambio turno: ${presi.length === 1 ? 'un PC torna' : `${presi.length} PC tornano`} alla lista dei codici.`
+}
 function liberaNome(id) { messaggio.value = ''; if (!libera(id)) senzaLinea() }
 function togliNome(id) { messaggio.value = ''; if (!togli(id)) senzaLinea() }
 
@@ -204,6 +210,10 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
                   @click="cambiaAlVolo({ aggiungi: true })">＋ Aggiungi un blocco</button>
           <button class="bottone chiaro piccolo" :disabled="diretta.linea !== 'su'" data-azione="cambia-lezione" @click="cambiaAlVolo()">Cambia la lezione</button>
           <Aiuto testo="Si manda ai bambini senza un codice nuovo: ognuno resta al blocco dove si trova, un blocco cambiato riparte con le domande nuove, e chi aveva finito passa al blocco aggiunto." />
+          <!-- a turno quando lo decide lei: tutti i nomi presi tornano nella lista (docs/scuola/lezione.md) -->
+          <Conferma v-if="alunni.some(a => a.preso)" etichetta="Cambio turno" domanda="Tutti i PC tornano alla lista dei codici?" si="Cambio turno"
+                    data-azione="cambio-turno" @si="cambioTurno" />
+          <Aiuto testo="Per quando i PC sono pochi: ogni PC torna alla lista dei codici e tocca a chi aspettava. Chi ha già giocato, quando ritocca il suo codice, anche su un altro PC, riparte dal blocco dove era." />
         </div>
       </section>
       <section class="carta" data-panoramica>

@@ -52,13 +52,14 @@ const passaGiusto = p => {
   return k.length === 1 && k[0] in TETTI_PASSA && intero(p[k[0]], TETTI_PASSA[k[0]])
 }
 const blocchiGiusti = b => Array.isArray(b) && b.length >= 1 && b.length <= MAX_BLOCCHI
-  && b.every(x => oggetto(x) && oggetto(x.esercizio) && x.passa !== undefined && passaGiusto(x.passa) && Object.keys(x).every(k => k === 'esercizio' || k === 'passa'))
+  && b.every(x => oggetto(x) && oggetto(x.esercizio) && x.passa !== undefined && passaGiusto(x.passa) && (x.turno === undefined || x.turno === true)
+    && Object.keys(x).every(k => k === 'esercizio' || k === 'passa' || k === 'turno'))
 
 /* una lezione a blocchi ripulita, o null */
 export function leggiLezione(l) {
   if (!oggetto(l) || typeof l.id !== 'string' || !l.id || l.id.length > 40 || typeof l.nome !== 'string') return null
   if (typeof l.inTondo !== 'boolean' || !blocchiGiusti(l.blocchi) || !Object.keys(l).every(k => ['id', 'nome', 'blocchi', 'inTondo'].includes(k))) return null
-  return { id: l.id, nome: nomePulito(l.nome, 60), blocchi: l.blocchi.map(x => ({ esercizio: x.esercizio, passa: x.passa })), inTondo: l.inTondo }
+  return { id: l.id, nome: nomePulito(l.nome, 60), blocchi: l.blocchi.map(x => ({ esercizio: x.esercizio, passa: x.passa, ...(x.turno ? { turno: true } : {}) })), inTondo: l.inTondo }
 }
 
 /* il corpo di `POST /scuola/lezione`: torna la lezione e gli alunni ripuliti, o l'errore */
@@ -96,6 +97,13 @@ const posizioneDi = (stato, a) => Math.max(Number.isInteger(a.dove) ? a.dove : 0
 
 /* ── cosa si racconta ── */
 const alunnoDi = (stato, posto) => stato.alunni.find(a => a.posto === posto) || null
+// un nome che torna nella lista (il turno finito, «Cambia nome», «Rimetti nella lista») si ricorda dov'era: il suo pavimento sale
+// lì, e chi lo ritocca, anche su un altro PC, riparte da quel blocco. Chi aveva finito resta finito
+function lasciaIlPosto(stato, a) {
+  const fin = a.dove === 'finito' && !stato.lezione.inTondo ? stato.lezione.blocchi.length : null
+  a.avanti = Math.min(MAX_AVANTI, Math.max(a.avanti || 0, fin ?? (Number.isInteger(a.dove) ? a.dove : 0)))
+  a.posto = null; a.dove = null
+}
 export const msgStato = (stato, posto) => {
   const io = alunnoDi(stato, posto)
   return { t: 'stato', fase: stato.fase, lezione: stato.lezione, rifatta: stato.rifatta || 0, avanti: stato.avanti || 0,
@@ -180,7 +188,7 @@ export function daBambino(stato, collegati, ws, posto, dato, azzardo = () => Mat
   if (dato.k === 'lascia') {
     const io = alunnoDi(stato, posto)
     if (!io) return { invii: [] }
-    io.posto = null; io.dove = null
+    lasciaIlPosto(stato, io)
     return { meta: true, invii: nomiCambiati(stato, collegati) }
   }
   return { invii: [] }
@@ -212,7 +220,7 @@ export function daMaestra(stato, collegati, dato) {
     a.domande = dato.si
     return { meta: true, invii: nomiCambiati(stato, collegati) }
   }
-  if (dato.k === 'libera' && a && a.posto !== null) { a.posto = null; a.dove = null; return { meta: true, invii: nomiCambiati(stato, collegati) } }
+  if (dato.k === 'libera' && a && a.posto !== null) { lasciaIlPosto(stato, a); return { meta: true, invii: nomiCambiati(stato, collegati) } }
   if (dato.k === 'togli' && a && a.nuovo) {
     stato.alunni = stato.alunni.filter(x => x !== a)
     delete stato.risposte[a.id]

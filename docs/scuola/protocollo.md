@@ -21,13 +21,14 @@ comune dei due lati è `src/scuola/comune/rete.js`. Il deploy del servizio lo fa
 
 ```js
 { id, nome,                          // id della lezione nel quaderno, nome per la maestra
-  blocchi: [{ esercizio, passa }],   // da 1 a 8; passa: { giuste | domande | minuti: n } o null (quando lo dice la maestra)
+  blocchi: [{ esercizio, passa, turno? }],   // da 1 a 8; passa: { giuste | domande | minuti: n } o null (quando lo dice la maestra);
+                                             // turno: true (finito il blocco tocca a un altro bambino), se no manca
   inTondo }                          // dopo l'ultimo blocco si ricomincia dal primo
 ```
 
 La forma e il perché stanno in [lezione.md](lezione.md); `esercizio` in [esercizi.md](esercizi.md). Il servizio non legge
 gli esercizi: controlla la forma dei blocchi e di `passa` (i tetti di `MODI_PASSA`: 500 giuste o domande, 180 minuti), la
-misura, e rimanda la lezione così com'è. Una chiave in più, un `passa` con due chiavi o vuoto, `inTondo` non booleano e la forma vecchia (`obiettivo`/`dopo`) sono rifiutati (`lezione storta`); `blocco` e `dove` stanno fra 0 e 10000.
+misura, e rimanda la lezione così com'è. Una chiave in più, un `turno` che non è `true`, un `passa` con due chiavi o vuoto, `inTondo` non booleano e la forma vecchia (`obiettivo`/`dopo`) sono rifiutati (`lezione storta`); `blocco` e `dove` stanno fra 0 e 10000.
 
 ## Le richieste HTTP
 
@@ -51,7 +52,7 @@ perché `lezione` porta una lezione intera).
 | `{ k: 'sono', nome }` | «Non trovo il mio nome»: il servizio crea un alunno `nuovo` (id `n` + casuale) e glielo assegna |
 | `{ k: 'risposta', n, blocco, chiave, fatto, data, attesa, giusta, ms, ultima? }` | `ultima: false` è un colpo sbagliato di un gioco con la domanda ancora aperta (negli Asteroidi un sasso sbagliato): la maestra lo vede fra le sbagliate ma non lo conta fra le fatte; senza, la risposta chiude la domanda. `n` progressivo del posto (da 1); `blocco` è la posizione `p` del bambino quando ha risposto (intero ≥ 0: in tondo cresce a ogni giro, il blocco è `p % blocchi`, [lezione.md](lezione.md)); `fatto`/`data`/`attesa` sono testi brevi (≤ 40) da `racconta()` di [esercizi.md](esercizi.md). Accettata solo in fase `via`, e solo se `n` è più grande dell'ultima presa per quel posto (chi rimanda una risposta già presa riceve solo la conferma) |
 | `{ k: 'dove', dove }` | la posizione `p` (intero ≥ 0) o `'finito'`: a che punto è, per il pannello della maestra |
-| `{ k: 'lascia' }` | «Cambia nome» dal menu della maestra sul PC ([ripieghi.md](ripieghi.md)): il nome del posto torna libero, come con `libera` |
+| `{ k: 'lascia' }` | «Cambia nome» dal menu della maestra sul PC ([ripieghi.md](ripieghi.md)) o il turno finito ([lezione.md](lezione.md)): il nome del posto torna libero, come con `libera`. **Si ricorda dov'era** (`lasciaIlPosto`): il pavimento suo `avanti` sale alla sua posizione (a tutti i blocchi se aveva finito), così chi ritocca quel nome, anche su un altro PC, riparte da lì |
 
 | Al bambino | |
 |---|---|
@@ -67,7 +68,7 @@ perché `lezione` porta una lezione intera).
 | `{ k: 'lezione', lezione }` | «Cambia la lezione» ([ripieghi.md](ripieghi.md)): la lezione nuova, controllata come nel `POST`; `rifatta` cresce, le posizioni restano. Non a lezione chiusa |
 | `{ k: 'salta', alunno }` | per lui solo: il suo pavimento va alla sua posizione più uno. Solo in fase `via`, non a chi ha finito |
 | `{ k: 'domande', alunno, si }` | per lui solo: le schede al posto del gioco (`si` booleano) |
-| `{ k: 'libera', alunno }` | il nome torna libero (un PC rotto, un bambino che ha toccato il nome sbagliato): il posto che lo teneva riceve uno `stato` con `io: null` e torna alla lista. Le risposte restano all'alunno |
+| `{ k: 'libera', alunno }` | il nome torna libero (un PC rotto, un bambino che ha toccato il nome sbagliato, il «Cambio turno»): il posto che lo teneva riceve uno `stato` con `io: null` e torna alla lista. Le risposte restano all'alunno, e come con `lascia` si ricorda dov'era |
 | `{ k: 'togli', alunno }` | solo per un alunno `nuovo` (un nome che la maestra non conosce): via lui e le sue risposte |
 
 | Alla maestra | |

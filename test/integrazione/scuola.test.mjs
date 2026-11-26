@@ -359,6 +359,32 @@ await M.tocca('[data-azione="annulla"]')
 await schermata(m, 'diretta')
 await scatto(m, 'scuola-al-volo')
 
+/* ── a turno, per pochi PC (docs/scuola/lezione.md) ── */
+// il cambio turno della maestra: il PC torna alla lista dei codici; Lorenzo ritocca il suo e riparte dal blocco dov'era
+if (await b.locator('[data-continua]').count()) await B.tocca('[data-continua]')
+await b.waitForSelector('[data-domanda][data-blocco="2"]', { timeout: 8000 })
+await M.tocca('[data-azione="cambio-turno"]')
+await M.tocca('[data-azione="conferma"]')
+await schermata(b, 'nome', 8000)
+controlla('«Cambio turno»: il PC del bambino torna alla lista dei codici', true)
+await B.tocca(`[data-nome="${lorenzo}"]`)
+await b.waitForSelector('[data-domanda][data-blocco="2"], [data-passaggio]', { timeout: 8000 })
+controlla('ritoccato il suo codice, Lorenzo riparte dal blocco dov\'era', await b.locator('[data-domanda][data-blocco="2"], [data-passaggio]').count() === 1)
+// il blocco a turno: finito, il PC dice che tocca a un altro e torna alla lista
+await M.tocca('[data-azione="cambia-lezione"]')
+await schermata(m, 'lezione')
+await m.locator('[data-blocco="2"] [data-campo="turno"]').check()
+await M.tocca('[data-azione="manda-lezione"]')
+await schermata(m, 'diretta')
+await m.waitForFunction(() => /Chiudi il blocco 3/.test(document.querySelector('[data-azione="avanti-tutti"]')?.innerText || ''), null, { timeout: 8000 })
+await M.tocca('[data-azione="avanti-tutti"]')
+await b.waitForSelector('[data-turno-finito]', { timeout: 8000 })
+controlla('finito il blocco a turno, il PC dice che tocca a un altro', /tocca a un altro/.test(await testo(b, '[data-turno-finito]')))
+await scatto(b, 'scuola-turno-finito')
+await B.tocca('[data-azione="fine-turno"]')
+await schermata(b, 'nome', 8000)
+controlla('e torna alla lista dei codici', true)
+
 /* ── «Chiudi lezione»: il bambino vede la fine, la maestra il resoconto ── */
 await M.tocca('[data-azione="chiudi-lezione"]')
 await M.tocca('[data-azione="conferma-chiudi"]')
