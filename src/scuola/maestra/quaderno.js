@@ -6,6 +6,14 @@ export const CHIAVI = { classi: 'scuola:classi', lezioni: 'scuola:lezioni', stor
 export const FORMATO = 'educagioco-quaderno'
 export const VERSIONE = 1
 export const MAX_ALUNNI = 40          // i tetti del servizio (docs/scuola/protocollo.md)
+
+// i codici al posto dei nomi: un colore ogni cinque bambini, «Rosso 1»…«Rosso 5», «Blu 1»…, fino a MAX_ALUNNI. Un colore e un
+// numero piccolo si riconoscono anche a sei anni (docs/scuola/quaderno.md, «I codici dei bambini»)
+const COLORI_CODICI = ['Rosso', 'Blu', 'Verde', 'Giallo', 'Viola', 'Arancio', 'Rosa', 'Marrone']
+export function codiciBambini(n) {
+  const quanti = Math.max(1, Math.min(MAX_ALUNNI, Math.floor(Number(n) || 0)))
+  return Array.from({ length: quanti }, (_, i) => `${COLORI_CODICI[Math.floor(i / 5)]} ${i % 5 + 1}`)
+}
 export const MAX_NOME = 24
 export const MAX_NOME_LEZIONE = L.MAX_NOME_LEZIONE
 export const MAX_NOME_CLASSE = 40

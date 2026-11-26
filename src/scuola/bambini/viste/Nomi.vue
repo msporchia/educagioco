@@ -25,7 +25,7 @@ function manda() {
 
 <template>
   <div class="centro nomi">
-    <h2>Chi sei? Tocca il tuo nome</h2>
+    <h2>Chi sei? Tocca il tuo codice</h2>
     <div class="elenco" data-nomi>
       <button v-for="a in alunni" :key="a.id" type="button" class="nome" :class="{ preso: a.preso }"
               :data-nome="a.id" :data-preso="a.preso ? '' : null" :disabled="a.preso || scelgo"
@@ -34,9 +34,9 @@ function manda() {
     <p v-if="scelgo" class="testo" data-scelgo>Un momento…</p>
     <p v-if="avviso" class="avviso-nome" data-nome-avviso>{{ avviso }}</p>
 
-    <button v-if="!scrivendo" type="button" class="bottone chiaro" data-non-trovo @click="nonTrovo">Non trovo il mio nome</button>
+    <button v-if="!scrivendo" type="button" class="bottone chiaro" data-non-trovo @click="nonTrovo">Non trovo il mio codice</button>
     <form v-else class="nuovo" @submit.prevent="manda">
-      <label class="testo" for="nome-nuovo">Scrivi il tuo nome</label>
+      <label class="testo" for="nome-nuovo">Scrivi il codice che ti ha dato la maestra</label>
       <input id="nome-nuovo" ref="campo" v-model="nome" class="campo" data-nome-nuovo maxlength="24"
              autocomplete="off" spellcheck="false">
       <button type="submit" class="bottone" data-nome-nuovo-manda :disabled="!nome.trim() || scelgo">Sono io</button>

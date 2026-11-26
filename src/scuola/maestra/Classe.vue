@@ -9,6 +9,9 @@ const props = defineProps({ id: { type: String, default: null } })
 const emit = defineEmits(['vai', 'indietro'])
 
 const vecchia = props.id ? classeDi(props.id) : null
+// un codice per bambino al posto del nome (docs/scuola/quaderno.md, «I codici dei bambini»): così nessun dato personale esce dal PC
+const quanti = ref(20)
+function creaCodici() { testo.value = Q.codiciBambini(quanti.value).join('\n') }
 const nome = ref(vecchia?.nome ?? '')
 const anno = ref(vecchia?.anno ?? null)
 const testo = ref(vecchia ? Q.testoDegliAlunni(vecchia) : '')
@@ -42,11 +45,21 @@ function cancella() {
     <label>Nome della classe
       <input v-model="nome" class="campo" :maxlength="Q.MAX_NOME_CLASSE" placeholder="per esempio: 3ª B" data-campo="nome-classe">
     </label>
-    <label>Gli alunni, uno per riga
+    <div class="codici" data-codici>
+      <p><b>Un codice per ogni bambino, non il nome.</b> Per esempio «Rosso 1», «Rosso 2», «Blu 1»: lo dai a ogni bambino su un
+        foglietto, e lui tocca il suo per entrare. I nomi scritti qui, quando avvii una lezione, passano dal servizio della scuola e
+        li vede chi ha il codice della lezione; con i codici non esce nessun dato personale.</p>
+      <div v-if="!testo.trim()" class="fila">
+        <input v-model.number="quanti" class="campo numero" type="number" min="1" :max="Q.MAX_ALUNNI" aria-label="quanti bambini" data-campo="quanti">
+        <span>bambini</span>
+        <button type="button" class="bottone" data-azione="crea-codici" @click="creaCodici">Crea i codici</button>
+      </div>
+    </div>
+    <label>I bambini, uno per riga
       <textarea v-model="testo" class="campo" spellcheck="false" data-campo="alunni"
-                placeholder="Si possono anche incollare da un elenco o da un foglio di calcolo"></textarea>
+                placeholder="Rosso 1&#10;Rosso 2&#10;Blu 1&#10;…"></textarea>
     </label>
-    <p class="nota" data-conta-alunni>{{ letti.alunni.length }} alunni. I bambini vedranno questi nomi e toccheranno il loro: scrivili come li riconoscono.</p>
+    <p class="nota" data-conta-alunni>{{ letti.alunni.length }} alunni. I bambini vedranno queste righe e toccheranno la loro.</p>
     <p v-if="letti.accorciati.length" class="avviso">Nomi lunghi, accorciati a {{ Q.MAX_NOME }} lettere: {{ letti.accorciati.join(', ') }}</p>
     <p v-if="problema" class="avviso" data-problema>{{ problema }}</p>
     <div class="fila">
@@ -60,4 +73,7 @@ function cancella() {
 <style scoped>
 .anno { display:flex; flex-direction:column; gap:6px }
 .titoletto { font-size:14px; font-weight:600 }
+.codici { display:flex; flex-direction:column; gap:8px; padding:12px 14px; border-radius:var(--raggio-piccolo); background:var(--penna-chiara);
+          font-size:14px; line-height:1.45 }
+.campo.numero { width:90px; flex:none }
 </style>

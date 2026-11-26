@@ -151,6 +151,19 @@ computer), lo storico e il quaderno compaiono con tutte e due. **«Apri il quade
 riparte dal file, e non può aspettare la classe. Nei test che guardano il resto, `test/aiuto/quaderno-scuola.mjs` semina una
 classe e una lezione.
 
+## I codici dei bambini e i dati
+
+Chiesto dall'utente, dopo i dubbi di una maestra sui dati e sull'IA. **L'editor della classe chiede un codice per bambino, non
+il nome** («Rosso 1», «Blu 2»: la maestra li dà su un foglietto), e spiega perché: i nomi, quando si avvia una lezione, passano
+dal servizio e li vede chi ha il codice della lezione. «Crea i codici» (`codiciBambini` del quaderno: un colore ogni cinque,
+fino a `MAX_ALUNNI`) li scrive da sé quando l'elenco è vuoto. La pagina dei bambini dice «Tocca il tuo codice» e «Scrivi il
+codice che ti ha dato la maestra».
+
+**«I dati dei bambini»** (`[data-dati-bambini]`, sempre in fondo alla pagina d'inizio) dice cosa esce e cosa no: il quaderno
+solo in questo browser, l'elenco e le risposte sul servizio solo durante la lezione e cancellati tre ore dopo (l'allarme di
+[protocollo.md](protocollo.md)), niente sui PC dei bambini, l'IA usata per scrivere il gioco e non mentre si gioca, il codice
+aperto. Ogni frase è verificata sul codice: se cambia il protocollo, va riletta.
+
 L'editor della lezione e la scelta del gioco: [editor.md](editor.md).
 
 ## La pelle

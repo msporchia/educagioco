@@ -315,4 +315,11 @@ let voce
   uguale('e un\'ultima del «dopo» che non c\'è va nel blocco che c\'è', senzaDopo.esiti.a1.ultime[0].blocco, 0)
 }
 
+/* ── i codici dei bambini al posto dei nomi ── */
+{
+  const { codiciBambini, MAX_ALUNNI } = await import('../../src/scuola/maestra/quaderno.js')
+  uguale('un colore ogni cinque', codiciBambini(7).join(','), 'Rosso 1,Rosso 2,Rosso 3,Rosso 4,Rosso 5,Blu 1,Blu 2')
+  controlla('fino al tetto degli alunni, e tutti diversi', codiciBambini(999).length === MAX_ALUNNI && new Set(codiciBambini(MAX_ALUNNI)).size === MAX_ALUNNI)
+}
+
 riassunto('il quaderno della maestra')

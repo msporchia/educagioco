@@ -90,6 +90,10 @@ controlla('ma un quaderno di un altro PC si apre subito', await m.locator('[data
 await scatto(m, 'scuola-primi-passi')
 await M.tocca('[data-azione="nuova-classe"]')
 await schermata(m, 'classe')
+// i codici al posto dei nomi: «Crea i codici» li scrive da sé
+await m.fill('[data-campo="quanti"]', '7')
+await M.tocca('[data-azione="crea-codici"]')
+uguale('«Crea i codici» scrive un codice per bambino', (await m.inputValue('[data-campo="alunni"]')).split('\n').join(','), 'Rosso 1,Rosso 2,Rosso 3,Rosso 4,Rosso 5,Blu 1,Blu 2')
 await m.fill('[data-campo="nome-classe"]', '3ª B')
 await m.fill('[data-campo="alunni"]', 'Lorenzo\nMarta')
 controlla('la classe conta due alunni', /^2 alunni/.test(await testo(m, '[data-conta-alunni]')), await testo(m, '[data-conta-alunni]'))

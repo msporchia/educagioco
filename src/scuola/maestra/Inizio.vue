@@ -71,10 +71,10 @@ function apriFile(e) {
   <section class="carta" data-come-funziona>
     <h2>Come funziona</h2>
     <ol class="passi">
-      <li><span class="n">1</span><b>Prepara</b><span>la classe coi nomi e una lezione: a che gioco, cosa si fa, quando si va avanti.</span></li>
+      <li><span class="n">1</span><b>Prepara</b><span>la classe, con un codice per ogni bambino, e una lezione: a che gioco, cosa si fa, quando si va avanti.</span></li>
       <li><span class="n">2</span><b>Apri sui PC</b><span>la pagina dei bambini,
         <a :href="indirizzo" target="_blank" rel="noopener" class="copiabile" data-indirizzo-passi>{{ indirizzo }}</a>, o il file con la chiavetta.</span></li>
-      <li><span class="n">3</span><b>Avvia</b><span>e scrivi il codice alla lavagna: ogni bambino lo scrive e tocca il suo nome.</span></li>
+      <li><span class="n">3</span><b>Avvia</b><span>e scrivi il codice alla lavagna: ogni bambino lo scrive e tocca il suo codice.</span></li>
       <li><span class="n">4</span><b>Via!</b><span>Vedi a che punto è ognuno; alla fine chiudi e hai il resoconto.</span></li>
     </ol>
   </section>
@@ -86,7 +86,7 @@ function apriFile(e) {
         <span class="segno" aria-hidden="true">{{ quaderno.classi.length ? '✓' : '1' }}</span>
         <span class="cosa"><b>La classe</b>
           <span v-if="quaderno.classi.length" class="nota">{{ quaderno.classi[0].nome }}, {{ quaderno.classi[0].alunni.length === 1 ? 'un bambino' : `${quaderno.classi[0].alunni.length} bambini` }}</span>
-          <span v-else>Il suo nome e i nomi dei bambini: ognuno toccherà il suo per entrare.</span></span>
+          <span v-else>Il suo nome e un codice per ogni bambino («Rosso 1», «Blu 2»): ognuno toccherà il suo per entrare.</span></span>
         <button v-if="quaderno.classi.length" class="bottone chiaro piccolo" data-azione="modifica-classe"
                 @click="emit('vai', 'classe', { id: quaderno.classi[0].id })">Modifica</button>
         <button v-else class="bottone" data-azione="nuova-classe" @click="emit('vai', 'classe', { id: null })">Crea la classe</button>
@@ -169,7 +169,7 @@ function apriFile(e) {
       <h2>Le classi</h2>
       <button class="bottone chiaro" data-azione="nuova-classe" @click="emit('vai', 'classe', { id: null })">Nuova classe</button>
     </div>
-    <p v-if="!quaderno.classi.length" class="nota">Ancora nessuna classe: scrivi il suo nome e i nomi dei bambini, uno per riga.</p>
+    <p v-if="!quaderno.classi.length" class="nota">Ancora nessuna classe: scrivi il suo nome e un codice per ogni bambino, uno per riga.</p>
     <ul v-else class="schede">
       <li v-for="c in quaderno.classi" :key="c.id" class="scheda" :data-classe="c.id">
         <b class="titolo">{{ c.nome || 'Senza nome' }}</b>
@@ -226,6 +226,22 @@ function apriFile(e) {
     <p class="nota">Aprire un quaderno non cancella niente: aggiunge quello che manca e aggiorna quello che c'è già.</p>
   </section>
   </template>
+  <!-- cosa esce da questo PC e cosa no, detto alla maestra (verificato sul codice: docs/scuola/protocollo.md, le 3 ore) -->
+  <section class="carta dati" data-dati-bambini>
+    <h2>I dati dei bambini</h2>
+    <ul class="punti">
+      <li><b>Classi, lezioni e risultati stanno solo in questo browser.</b> Escono solo se salvi il quaderno in un file.</li>
+      <li><b>Quando avvii una lezione</b>, l'elenco della classe va al servizio della scuola, che lo mostra solo a chi ha il codice
+        della lezione, e le risposte dei bambini passano di lì. <b>Tre ore dopo il servizio cancella tutto</b>, comunque vada.</li>
+      <li><b>Per questo usa un codice per ogni bambino</b> («Rosso 1», «Blu 2») invece del nome: così nessun dato personale esce da
+        questo computer.</li>
+      <li><b>Sui PC dei bambini non resta niente</b>: niente account, niente pubblicità.</li>
+      <li><b>L'intelligenza artificiale</b> è servita a scrivere parte del gioco e delle domande, come si scrive un testo. Mentre si
+        gioca non c'è nessuna IA, e i dati non vanno a nessun altro servizio.</li>
+      <li><b>Il codice è aperto</b>: chiunque può controllare cosa fa, su
+        <a href="https://github.com/msporchia/educagioco" target="_blank" rel="noopener">github.com/msporchia/educagioco</a>.</li>
+    </ul>
+  </section>
   <input ref="scelta" type="file" accept=".json,application/json" hidden data-file-quaderno @change="apriFile">
 </template>
 
@@ -258,6 +274,7 @@ function apriFile(e) {
 .blocco-lezione .dentro { display:flex; flex-direction:column; gap:4px; min-width:0; font-size:14px }
 .voce-menu:disabled { opacity:.45; cursor:default }
 .conferma-cancella { font-size:14px }
+.punti { padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:14px; line-height:1.45; max-width:80ch }
 .voci { padding-left:18px; display:flex; flex-direction:column; gap:2px; line-height:1.35 }
 .faccine { display:flex; flex-wrap:wrap; gap:4px; align-items:center }
 .altri { font-size:13px; font-weight:700; color:var(--grigio); padding-left:4px }
