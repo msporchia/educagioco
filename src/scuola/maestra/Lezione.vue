@@ -185,12 +185,11 @@ async function copiaLink() {
         <div class="fila"><button class="bottone" :disabled="!passaValido(passaDi(b))" data-azione="passa-fatto" @click="b.cambia = false">Fatto</button></div>
       </template>
     </div>
-    <!-- a turno, per pochi PC: finito il blocco il PC torna alla lista dei codici e tocca a un altro (docs/scuola/lezione.md) -->
-    <div v-if="valido(b.esercizio)" class="fila turno">
-      <label class="spunta">
-        <input v-model="b.turno" type="checkbox" data-campo="turno">
-        <span>Finito il blocco, tocca a un altro bambino</span>
-      </label>
+    <!-- a turno, per pochi PC: finito il blocco il PC torna alla lista dei codici e tocca a un altro (docs/scuola/lezione.md). Una
+         riga come le altre scelte del blocco, col suo «Cambia»: provata una spunta sciolta, non sembrava una scelta (segnalato dall'utente) -->
+    <div v-if="valido(b.esercizio)" class="fila turno" :data-turno="b.turno">
+      <Fatta class="riga-turno" etichetta="Finito il blocco" :valore="b.turno ? 'tocca a un altro bambino' : 'resta lo stesso bambino'"
+             passo="turno" @cambia="b.turno = !b.turno" />
       <Aiuto testo="Per quando i PC sono pochi: finito il blocco, il PC torna alla lista dei codici e un altro bambino tocca il suo. Chi ha già giocato, quando ritocca il suo codice, anche su un altro PC, riparte dal blocco dopo. Con un blocco solo, scegli dopo quanti minuti finisce il turno." />
     </div>
   </section>
@@ -247,6 +246,8 @@ async function copiaLink() {
 .scelta-passa { display:inline-flex; align-items:center; gap:4px }
 .spunta input { width:20px; height:20px; flex:none }
 .chiuso { gap:8px }
+.turno { flex-wrap:nowrap }
+.riga-turno { flex:1 }
 .carta.qui { box-shadow:0 0 0 3px var(--penna), var(--ombra) }   /* il blocco aperto dalla lezione in corso */
 .comandi { justify-content:flex-end }
 .blocchi-spiegati { font-size:14px; max-width:70ch }

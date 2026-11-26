@@ -46,9 +46,10 @@ function cancella() {
       <input v-model="nome" class="campo" :maxlength="Q.MAX_NOME_CLASSE" placeholder="per esempio: 3ª B" data-campo="nome-classe">
     </label>
     <div class="codici" data-codici>
-      <p><b>Un codice per ogni bambino, non il nome.</b> Per esempio «Rosso 1», «Rosso 2», «Blu 1»: lo dai a ogni bambino su un
-        foglietto, e lui tocca il suo per entrare. I nomi scritti qui, quando avvii una lezione, passano dal servizio della scuola e
-        li vede chi ha il codice della lezione; con i codici non esce nessun dato personale.</p>
+      <p><b>Per non trattare dati personali come i nomi dei bambini, è meglio usare un codice per ognuno</b>, per esempio «Rosso 1»,
+        «Rosso 2», «Blu 1»: lo dai a ogni bambino su un foglietto, e lui tocca il suo per entrare. Quello che scrivi qui, quando avvii
+        una lezione, passa dal servizio della scuola e lo vede chi ha il codice della lezione: con i codici non esce nessun dato
+        personale.</p>
       <div v-if="!testo.trim()" class="fila">
         <input v-model.number="quanti" class="campo numero" type="number" min="1" :max="Q.MAX_ALUNNI" aria-label="quanti bambini" data-campo="quanti">
         <span>bambini</span>

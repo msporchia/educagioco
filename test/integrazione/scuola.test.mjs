@@ -135,7 +135,7 @@ await M.tocca('[data-blocco="0"] [data-azione="cosa-fatta"]')
 uguale('tutto deciso: il blocco lo sa', await m.locator('[data-blocco="0"]').getAttribute('data-chiuso'), 'true')
 // fatto, il blocco resta le sue righe, ognuna col suo «Cambia»: non un riassunto con «Modifica»
 controlla('righe: il gioco e cosa si fa, ognuna col suo «Cambia»', /Le domande/.test(await testo(m, '[data-blocco="0"] [data-fatta="gioco"]')) &&
-          /Tabellina del 2/.test(await testo(m, '[data-blocco="0"] [data-fatta="cosa"]')) && await m.locator('[data-blocco="0"] [data-cambia]').count() === 2)
+          /Tabellina del 2/.test(await testo(m, '[data-blocco="0"] [data-fatta="cosa"]')) && await m.locator('[data-blocco="0"] [data-cambia]:not([data-cambia="turno"])').count() === 2)
 uguale('niente riassunto né «Modifica»', await m.locator('[data-riassunto-blocco], [data-azione="apri-blocco"]').count(), 0)
 // un blocco solo va finché la maestra chiude: niente «quando si passa»; il blocco dopo si aggiunge
 uguale('un blocco solo: niente «quando si passa»', await m.locator('[data-passa-scelto]').count(), 0)
@@ -152,7 +152,7 @@ await M.tocca('[data-blocco="1"] [data-difficolta="normale"]')
 uguale('scelta anche la difficoltà, il secondo si chiude', await m.locator('[data-blocco="1"]').getAttribute('data-chiuso'), 'true')
 controlla('e dice quando finisce: quando lo dice la maestra', /lo dice la maestra/.test(await testo(m, '[data-blocco="1"] [data-fatta="passa"]')))
 // col blocco dopo, il primo ha anche quando si passa, come riga
-uguale('le scelte del primo sono righe: il gioco, cosa si chiede, quando si passa', await m.locator('[data-blocco="0"] [data-fatta]').count(), 3)
+uguale('le scelte del primo sono righe: il gioco, cosa si chiede, quando si passa', await m.locator('[data-blocco="0"] [data-fatta]:not([data-fatta="turno"])').count(), 3)
 uguale('col blocco dopo, di base si passa quando lo dice la maestra', await m.locator('[data-blocco="0"] [data-passa-scelto]').getAttribute('data-passa-scelto'), 'maestra')
 await M.tocca('[data-blocco="0"] [data-cambia="passa"]')
 await M.tocca('[data-blocco="0"] [data-passa="giuste"]')
@@ -373,7 +373,9 @@ controlla('ritoccato il suo codice, Lorenzo riparte dal blocco dov\'era', await 
 // il blocco a turno: finito, il PC dice che tocca a un altro e torna alla lista
 await M.tocca('[data-azione="cambia-lezione"]')
 await schermata(m, 'lezione')
-await m.locator('[data-blocco="2"] [data-campo="turno"]').check()
+uguale('a lezione creata, il turno è una scelta del blocco come le altre', (await testo(m, '[data-blocco="2"] [data-fatta="turno"] .valore')).trim(), 'resta lo stesso bambino')
+await M.tocca('[data-blocco="2"] [data-cambia="turno"]')
+uguale('«Cambia»: tocca a un altro', (await testo(m, '[data-blocco="2"] [data-fatta="turno"] .valore')).trim(), 'tocca a un altro bambino')
 await M.tocca('[data-azione="manda-lezione"]')
 await schermata(m, 'diretta')
 await m.waitForFunction(() => /Chiudi il blocco 3/.test(document.querySelector('[data-azione="avanti-tutti"]')?.innerText || ''), null, { timeout: 8000 })

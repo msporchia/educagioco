@@ -151,7 +151,8 @@ function apriFile(e) {
             <span class="dentro">
               <b>{{ l.blocchi.length > 1 ? `${i + 1}. ` : '' }}{{ vociDelBlocco(b.esercizio).gioco?.nome ?? 'Esercizio non valido' }}</b>
               <ul class="voci"><li v-for="(v, k) in vociDelBlocco(b.esercizio).voci" :key="k">{{ v }}</li></ul>
-              <span class="nota">{{ [vociDelBlocco(b.esercizio).difficolta, l.blocchi.length > 1 ? `si passa ${descriviPassa(b.passa, b.esercizio)}` : 'finché chiudi la lezione'].filter(Boolean).join(' · ') }}</span>
+              <span class="nota">{{ [vociDelBlocco(b.esercizio).difficolta, l.blocchi.length > 1 || b.turno ? `si passa ${descriviPassa(b.passa, b.esercizio)}` : 'finché chiudi la lezione'].filter(Boolean).join(' · ') }}</span>
+              <span v-if="b.turno" class="turno-scheda" data-turno-scheda>poi tocca a un altro bambino</span>
             </span>
           </li>
         </ol>
@@ -275,6 +276,7 @@ function apriFile(e) {
 .voce-menu:disabled { opacity:.45; cursor:default }
 .conferma-cancella { font-size:14px }
 .punti { padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:14px; line-height:1.45; max-width:80ch }
+.turno-scheda { align-self:flex-start; font-size:13px; font-weight:700; color:var(--penna); background:var(--superficie); border-radius:999px; padding:2px 10px }
 .voci { padding-left:18px; display:flex; flex-direction:column; gap:2px; line-height:1.35 }
 .faccine { display:flex; flex-wrap:wrap; gap:4px; align-items:center }
 .altri { font-size:13px; font-weight:700; color:var(--grigio); padding-left:4px }
